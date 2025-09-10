@@ -29,7 +29,7 @@ func WithParallelsNum(parallels int) Options {
 
 // WithDelay creates an Options function that sets the delay of a Scraper.
 //
-// The delay parameter specifies the amount of time in milliseconds that
+// The delay parameter specifies the amount of time in seconds that
 // the Scraper should wait between requests.
 //
 // Default value: 3
