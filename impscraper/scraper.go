@@ -91,10 +91,10 @@ func (s Scraper) Description() string {
 // It returns a string containing the scraped data and an error if any.
 //
 //nolint:all
-func (s Scraper) Call(ctx context.Context, input string) (string, error) {
+func (s Scraper) Call(ctx context.Context, input string) ([]string, string, error) {
 	_, err := url.ParseRequestURI(input)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
+		return nil, "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
 	}
 
 	options := []func(*colly.Collector){
@@ -114,7 +114,7 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 		Delay:       s.Delay,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
+		return nil, "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
 	}
 
 	// yongj.zhuang: replace transport for impersonation support
@@ -122,10 +122,13 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 	cc.ImpersonateChrome()
 	c.WithTransport(cc.Transport)
 
-	var siteData strings.Builder
+	var logData strings.Builder
+
 	homePageLinks := make(map[string]bool)
 	scrapedLinks := make(map[string]bool)
 	scrapedLinksMutex := sync.RWMutex{}
+	scrapedContent := []string{}
+	scrapedContentMutex := sync.Mutex{}
 
 	c.OnRequest(func(r *colly.Request) {
 		if ctx.Err() != nil {
@@ -142,6 +145,7 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 			scrapedLinks[currentURL] = true
 			scrapedLinksMutex.Unlock()
 
+			siteData := strings.Builder{}
 			siteData.WriteString("\n\nPage URL: " + currentURL)
 
 			title := e.ChildText("title")
@@ -173,6 +177,9 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 					}
 				})
 			}
+			scrapedContentMutex.Lock()
+			scrapedContent = append(scrapedContent, siteData.String())
+			scrapedContentMutex.Unlock()
 		} else {
 			scrapedLinksMutex.Unlock()
 		}
@@ -215,7 +222,7 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 
 				// yongj.zhuang: ErrAlreadyVisited should not be included in siteData
 				if !errors.Is(err, colly.ErrAlreadyVisited) {
-					siteData.WriteString(fmt.Sprintf("\nError following link %s: %v", link, err))
+					logData.WriteString(fmt.Sprintf("\nError following link %s: %v", link, err))
 				}
 			}
 		} else {
@@ -225,23 +232,21 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 
 	err = c.Visit(input)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
+		return nil, "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
 	}
 
 	select {
 	case <-ctx.Done():
-		return "", ctx.Err()
+		return nil, "", ctx.Err()
 	default:
 		c.Wait()
 	}
 
 	// Append all scraped links
-	siteData.WriteString("\n\nScraped Links:")
+	logData.WriteString("\n\nScraped Links:")
 	for link := range scrapedLinks {
-		siteData.WriteString("\n" + link)
+		logData.WriteString("\n" + link)
 	}
 
-	out := siteData.String()
-
-	return out, nil
+	return scrapedContent, logData.String(), nil
 }
