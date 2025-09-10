@@ -13,3 +13,16 @@ Impersonation support is powered by [imroc/req](https://github.com/imroc/req).
 ```
 go get github.com/curtisnewbie/imp-lcscraper
 ```
+
+E.g.,
+
+```go
+scraper, err := impscraper.New(impscraper.WithMaxDepth(2),
+    impscraper.WithIgnoreRobotsTxt(true),
+    impscraper.WithDelay(50*time.Millisecond),
+    impscraper.WithAsync(true),
+    impscraper.WithParallelsNum(2),
+)
+
+// ...
+```
