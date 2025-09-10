@@ -88,10 +88,9 @@ func (s Scraper) Description() string {
 //
 // The function takes a context.Context object for managing the execution
 // context and a string input representing the URL of the website to be scraped.
-// It returns a string containing the scraped data and an error if any.
 //
 //nolint:all
-func (s Scraper) Call(ctx context.Context, input string) ([]string, string, error) {
+func (s Scraper) Call(ctx context.Context, input string) (pages []string, log string, er error) {
 	_, err := url.ParseRequestURI(input)
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
@@ -158,12 +157,12 @@ func (s Scraper) Call(ctx context.Context, input string) ([]string, string, erro
 				siteData.WriteString("\nPage Description: " + description)
 			}
 
-			siteData.WriteString("\nHeaders:")
+			siteData.WriteString("\n\nHeaders:")
 			e.ForEach("h1, h2, h3, h4, h5, h6", func(_ int, el *colly.HTMLElement) {
 				siteData.WriteString("\n" + el.Text)
 			})
 
-			siteData.WriteString("\nContent:")
+			siteData.WriteString("\n\nContent:")
 			e.ForEach("p", func(_ int, el *colly.HTMLElement) {
 				siteData.WriteString("\n" + el.Text)
 			})
