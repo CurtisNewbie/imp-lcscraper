@@ -11,7 +11,6 @@ import (
 
 	"github.com/gocolly/colly"
 	"github.com/imroc/req/v3"
-	"github.com/tmc/langchaingo/tools"
 )
 
 const (
@@ -32,7 +31,7 @@ type Scraper struct {
 	IgnoreRobotsTxt bool
 }
 
-var _ tools.Tool = Scraper{}
+// var _ tools.Tool = Scraper{}
 
 // New creates a new instance of Scraper with the provided options.
 //
