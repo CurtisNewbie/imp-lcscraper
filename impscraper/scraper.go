@@ -24,11 +24,12 @@ const (
 var ErrScrapingFailed = errors.New("scraper could not read URL, or scraping is not allowed for provided URL")
 
 type Scraper struct {
-	MaxDepth  int
-	Parallels int
-	Delay     int64
-	Blacklist []string
-	Async     bool
+	MaxDepth        int
+	Parallels       int
+	Delay           int64
+	Blacklist       []string
+	Async           bool
+	IgnoreRobotsTxt bool
 }
 
 var _ tools.Tool = Scraper{}
@@ -97,10 +98,16 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 		return "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
 	}
 
-	c := colly.NewCollector(
+	options := []func(*colly.Collector){
 		colly.MaxDepth(s.MaxDepth),
 		colly.Async(s.Async),
-	)
+	}
+
+	if s.IgnoreRobotsTxt {
+		options = append(options, colly.IgnoreRobotsTxt())
+	}
+
+	c := colly.NewCollector(options...)
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "*",

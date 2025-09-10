@@ -101,3 +101,9 @@ func WithBlacklist(blacklist []string) Options {
 		o.Blacklist = append(o.Blacklist, blacklist...)
 	}
 }
+
+func WithIgnoreRobotsTxt(ignore bool) Options {
+	return func(o *Scraper) {
+		o.IgnoreRobotsTxt = ignore
+	}
+}
