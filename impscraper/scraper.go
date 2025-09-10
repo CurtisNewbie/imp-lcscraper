@@ -16,7 +16,7 @@ import (
 const (
 	DefualtMaxDept   = 1
 	DefualtParallels = 2
-	DefualtDelay     = 3
+	DefualtDelay     = 3 * time.Second
 	DefualtAsync     = true
 )
 
@@ -25,7 +25,7 @@ var ErrScrapingFailed = errors.New("scraper could not read URL, or scraping is n
 type Scraper struct {
 	MaxDepth        int
 	Parallels       int
-	Delay           int64
+	Delay           time.Duration
 	Blacklist       []string
 	Async           bool
 	IgnoreRobotsTxt bool
@@ -45,7 +45,7 @@ func New(options ...Options) (*Scraper, error) {
 	scraper := &Scraper{
 		MaxDepth:  DefualtMaxDept,
 		Parallels: DefualtParallels,
-		Delay:     int64(DefualtDelay),
+		Delay:     DefualtDelay,
 		Async:     DefualtAsync,
 		Blacklist: []string{
 			"login",
@@ -111,13 +111,13 @@ func (s Scraper) Call(ctx context.Context, input string) (string, error) {
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "*",
 		Parallelism: s.Parallels,
-		Delay:       time.Duration(s.Delay) * time.Second,
+		Delay:       s.Delay,
 	})
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
 	}
 
-	// replace transport for impersonation support
+	// yongj.zhuang: replace transport for impersonation support
 	cc := req.C()
 	cc.ImpersonateChrome()
 	c.WithTransport(cc.Transport)

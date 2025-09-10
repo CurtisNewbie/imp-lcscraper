@@ -1,5 +1,7 @@
 package impscraper
 
+import "time"
+
 type Options func(*Scraper)
 
 // WithMaxDepth sets the maximum depth for the Scraper.
@@ -29,14 +31,16 @@ func WithParallelsNum(parallels int) Options {
 
 // WithDelay creates an Options function that sets the delay of a Scraper.
 //
-// The delay parameter specifies the amount of time in seconds that
+// The delay parameter specifies the amount of time that
 // the Scraper should wait between requests.
 //
-// Default value: 3
+// Default value: 3 second
 //
 // delay: the delay to set.
 // Returns: an Options function.
-func WithDelay(delay int64) Options {
+//
+// yongj.zhuang: delay was int type in langchaingo.
+func WithDelay(delay time.Duration) Options {
 	return func(o *Scraper) {
 		o.Delay = delay
 	}
