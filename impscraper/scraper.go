@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/curtisnewbie/impcolly"
 	"github.com/gocolly/colly"
-	"github.com/imroc/req/v3"
 )
 
 const (
@@ -105,7 +105,8 @@ func (s Scraper) Call(ctx context.Context, input string) (pages []string, log st
 		options = append(options, colly.IgnoreRobotsTxt())
 	}
 
-	c := colly.NewCollector(options...)
+	// yongj.zhuang: colly collector with impersonation support
+	c := impcolly.NewCollector(options...)
 
 	err = c.Limit(&colly.LimitRule{
 		DomainGlob:  "*",
@@ -115,11 +116,6 @@ func (s Scraper) Call(ctx context.Context, input string) (pages []string, log st
 	if err != nil {
 		return nil, "", fmt.Errorf("%s: %w", ErrScrapingFailed, err)
 	}
-
-	// yongj.zhuang: replace transport for impersonation support
-	cc := req.C()
-	cc.ImpersonateChrome()
-	c.WithTransport(cc.Transport)
 
 	var logData strings.Builder
 
