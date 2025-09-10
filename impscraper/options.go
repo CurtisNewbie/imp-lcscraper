@@ -1,4 +1,4 @@
-package scraper
+package impscraper
 
 type Options func(*Scraper)
 
